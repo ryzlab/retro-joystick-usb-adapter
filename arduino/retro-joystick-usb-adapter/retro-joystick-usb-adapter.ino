@@ -1,51 +1,10 @@
+// https://github.com/MHeironimus/ArduinoJoystickLibrary
+
 #include <Keyboard.h>
 
 #include <Joystick.h>
 
 #include <Bounce2.h>
-
-// Joystick to pin mapping
-#define TAC2_SELECT_PIN 7
-#define TAC2_START_PIN  8
-#define TAC2_FIRE_PIN   6
-#define TAC2_UP_PIN     2
-#define TAC2_DOWN_PIN   3
-#define TAC2_LEFT_PIN   4
-#define TAC2_RIGHT_PIN  5
-
-// Joystick config
-#define MIN_JOYSTICK_VALUE -1
-#define MAX_JOYSTICK_VALUE 1
-
-// Bounce in milliseconds
-#define BOUNCE_INTERVAL                 5
-// Longer interval for start and select to prevent accidental exit of emulator
-#define BOUNCE_INTERVAL_CONTROL_BUTTONS 700
-
-// Convenience when looping over controls
-#define AXIS_COUNT 4
-#define BUTTON_COUNT 3
-
-// Index in axisControlBounce array
-#define CONTROL_UP_INDEX    0
-#define CONTROL_DOWN_INDEX  1
-#define CONTROL_LEFT_INDEX  2
-#define CONTROL_RIGHT_INDEX 3
-
-// Array used for setting up axis input pins and attach bounce
-int axisControlPins[4] = {TAC2_UP_PIN, TAC2_DOWN_PIN, TAC2_LEFT_PIN, TAC2_RIGHT_PIN};
-// Bounce for axisControlPins
-Bounce axisControlBounce[4] = {Bounce(), Bounce(), Bounce(), Bounce()};
-
-// Array used for setting up button input pins and attach bounce
-int buttonPins[3] = {TAC2_FIRE_PIN, TAC2_SELECT_PIN, TAC2_START_PIN};
-// Bounce for buttonPins
-Bounce buttonBounce[3] = {Bounce(), Bounce(), Bounce()};
-
-// Bounce is a bit different for start and select to prevent accidental exit from emulator
-// (start+select exits emulator so we want longer interval)
-int axisBounceIntervals[4] = {BOUNCE_INTERVAL, BOUNCE_INTERVAL, BOUNCE_INTERVAL, BOUNCE_INTERVAL};
-int buttonBounceIntervals[3] = {BOUNCE_INTERVAL, BOUNCE_INTERVAL_CONTROL_BUTTONS, BOUNCE_INTERVAL_CONTROL_BUTTONS};
 
 Joystick_ joystick(
   0x03,   // uint8_t hidReportId  - Default: 0x03 - Indicates the joystick's HID report ID.
@@ -71,68 +30,98 @@ Joystick_ joystick(
   false   // bool     includeSteering -     Default: true - Indicates if the Steering is available on the joystick.
 );
 
+// Joystick to pin mapping
+#define PIN_UP     2
+#define PIN_DOWN   3
+#define PIN_LEFT   4
+#define PIN_RIGHT  5
+#define PIN_FIRE   6
+#define PIN_SELECT 7
+#define PIN_START  8
+
+// Bounce in milliseconds
+#define BOUNCE_INTERVAL    5
+
+// Bounce for pins
+Bounce upBounce =     Bounce();
+Bounce downBounce =   Bounce();
+Bounce leftBounce =   Bounce();
+Bounce rightBounce =  Bounce();
+Bounce fireBounce =   Bounce();
+Bounce selectBounce = Bounce();
+Bounce startBounce =  Bounce();
 
 void setup() {
   Serial.begin(9600);
 
-  // Initialize pins and bounce for axis controls
-  for (int cnt=0; cnt < AXIS_COUNT; cnt++) {
-    pinMode(axisControlPins[cnt], INPUT_PULLUP);
-    axisControlBounce[cnt].attach(axisControlPins[cnt]);
-    axisControlBounce[cnt].interval(axisBounceIntervals[cnt]);
-  }
-  // Initialize pins and bounce for button controls
-  for (int cnt=0; cnt < BUTTON_COUNT; cnt++) {
-    pinMode(buttonPins[cnt], INPUT_PULLUP);
-    buttonBounce[cnt].attach(buttonPins[cnt]);
-    buttonBounce[cnt].interval(buttonBounceIntervals[cnt]);
-  }
-  joystick.setXAxisRange(MIN_JOYSTICK_VALUE, MAX_JOYSTICK_VALUE);
-  joystick.setYAxisRange(MIN_JOYSTICK_VALUE, MAX_JOYSTICK_VALUE);
+  pinMode (PIN_UP,     INPUT_PULLUP);
+  pinMode (PIN_DOWN,   INPUT_PULLUP);
+  pinMode (PIN_LEFT,   INPUT_PULLUP);
+  pinMode (PIN_RIGHT,  INPUT_PULLUP);
+  pinMode (PIN_FIRE,   INPUT_PULLUP);
+  pinMode (PIN_SELECT, INPUT_PULLUP);
+  pinMode (PIN_START,  INPUT_PULLUP);
+
+  upBounce.attach     (PIN_UP);
+  downBounce.attach   (PIN_DOWN);
+  leftBounce.attach   (PIN_LEFT);
+  rightBounce.attach  (PIN_RIGHT);
+  fireBounce.attach   (PIN_FIRE);
+  selectBounce.attach (PIN_SELECT);
+  startBounce.attach  (PIN_START);
+
+  joystick.setXAxisRange(-1, 1);
+  joystick.setYAxisRange(-1, 1);
   joystick.begin(true);
 }
+
 void loop() {
-  for (int cnt=0; cnt < AXIS_COUNT; cnt++) {
-    axisControlBounce[cnt].update();
-  }
-  for (int cnt=0; cnt < BUTTON_COUNT; cnt++) {
-    buttonBounce[cnt].update();
-    if (buttonBounce[cnt].fell()) {
-      //Keyboard.press(' ');
-      joystick.pressButton(cnt);
-    } else if (buttonBounce[cnt].rose()) {
-      //Keyboard.release(' ');
-      joystick.releaseButton(cnt);
-    }
+  upBounce.update();
+  downBounce.update();
+  leftBounce.update();
+  rightBounce.update();
+  fireBounce.update();
+  selectBounce.update();
+  startBounce.update();
 
+  // fell = switch closed
+  if (upBounce.fell()) { 
+    joystick.setYAxis(-1); 
+  } else if (upBounce.rose()) {
+    joystick.setYAxis(0); 
+  }
+  if (downBounce.fell()) { 
+    joystick.setYAxis(1); 
+  } else if (downBounce.rose()) {
+    joystick.setYAxis(0); 
+  }
+  if (leftBounce.fell()) { 
+    joystick.setXAxis(-1); 
+  } else if (leftBounce.rose()) {
+    joystick.setXAxis(0); 
+  }
+  if (rightBounce.fell()) { 
+    joystick.setXAxis(1); 
+  } else if (rightBounce.rose()) {
+    joystick.setXAxis(0); 
   }
 
-  if (axisControlBounce[CONTROL_UP_INDEX].fell()) {
-    joystick.setYAxis(MIN_JOYSTICK_VALUE);
-    //Keyboard.press(KEY_UP_ARROW);
-  } else if (axisControlBounce[CONTROL_UP_INDEX].rose()) {
-    //Keyboard.release(KEY_UP_ARROW);
-    joystick.setYAxis(0);
+  // 0 = fire
+  // 1 = select
+  // 2 = start
+  if (fireBounce.fell()) { 
+    joystick.pressButton(0); 
+  } else if (fireBounce.rose()) {
+    joystick.releaseButton(0); 
   }
-  if (axisControlBounce[CONTROL_DOWN_INDEX].fell()) {
-    //Keyboard.press(KEY_DOWN_ARROW);
-    joystick.setYAxis(MAX_JOYSTICK_VALUE);
-  } else if (axisControlBounce[CONTROL_DOWN_INDEX].rose()) {
-    //Keyboard.release(KEY_DOWN_ARROW);
-    joystick.setYAxis(0);
+  if (selectBounce.fell()) { 
+    joystick.pressButton(1); 
+  } else if (selectBounce.rose()) {
+    joystick.releaseButton(1); 
   }
-  if (axisControlBounce[CONTROL_LEFT_INDEX].fell()) {
-    //Keyboard.press(KEY_LEFT_ARROW);
-    joystick.setXAxis(MIN_JOYSTICK_VALUE);
-  } else if (axisControlBounce[CONTROL_LEFT_INDEX].rose()) {
-    // Keyboard.release(KEY_LEFT_ARROW);
-    joystick.setXAxis(0);
-  }
-  if (axisControlBounce[CONTROL_RIGHT_INDEX].fell()) {
-    //Keyboard.press(KEY_LEFT_ARROW);
-    joystick.setXAxis(MAX_JOYSTICK_VALUE);
-  } else if (axisControlBounce[CONTROL_RIGHT_INDEX].rose()) {
-    // Keyboard.release(KEY_LEFT_ARROW);
-    joystick.setXAxis(0);
+  if (startBounce.fell()) { 
+    joystick.pressButton(2); 
+  } else if (startBounce.rose()) {
+    joystick.releaseButton(2); 
   }
 }
