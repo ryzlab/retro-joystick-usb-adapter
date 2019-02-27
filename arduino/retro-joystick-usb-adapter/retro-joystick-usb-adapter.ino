@@ -6,6 +6,9 @@
 
 #include <Bounce2.h>
 
+#define JOYSTICK 1
+#define KEYBOARD 2
+
 Joystick_ joystick(
   0x03,   // uint8_t hidReportId  - Default: 0x03 - Indicates the joystick's HID report ID.
           // This value must be unique if you are creating multiple instances of Joystick.
@@ -39,6 +42,8 @@ Joystick_ joystick(
 #define PIN_SELECT 7
 #define PIN_START  8
 
+int inputMode ;
+
 // Bounce in milliseconds
 #define BOUNCE_INTERVAL    5
 
@@ -70,9 +75,25 @@ void setup() {
   selectBounce.attach (PIN_SELECT);
   startBounce.attach  (PIN_START);
 
-  joystick.setXAxisRange(-1, 1);
-  joystick.setYAxisRange(-1, 1);
-  joystick.begin(true);
+  upBounce.interval     (BOUNCE_INTERVAL);
+  downBounce.interval   (BOUNCE_INTERVAL);
+  leftBounce.interval   (BOUNCE_INTERVAL);
+  rightBounce.interval  (BOUNCE_INTERVAL);
+  fireBounce.interval   (BOUNCE_INTERVAL);
+  selectBounce.interval (BOUNCE_INTERVAL);
+  startBounce.interval  (BOUNCE_INTERVAL);
+
+  selectBounce.update();
+  startBounce.update();
+  if (selectBounce.read() == LOW || startBounce.read() == LOW) {
+    inputMode = KEYBOARD;
+    Keyboard.begin();
+  } else {
+    inputMode = JOYSTICK;
+    joystick.setXAxisRange(-1, 1);
+    joystick.setYAxisRange(-1, 1);
+    joystick.begin(true);
+  }
 }
 
 void loop() {
@@ -85,34 +106,74 @@ void loop() {
   startBounce.update();
 
   // fell = switch closed
-  if (upBounce.fell()) { 
-    joystick.setYAxis(-1); 
+  if (upBounce.fell()) {
+    if (inputMode == JOYSTICK) { 
+      joystick.setYAxis(-1); 
+    } else {
+      Keyboard.press(KEY_UP_ARROW);
+    }
   } else if (upBounce.rose()) {
-    joystick.setYAxis(0); 
+    if (inputMode == JOYSTICK) { 
+      joystick.setYAxis(0); 
+    } else {
+      Keyboard.release(KEY_UP_ARROW);
+    }
   }
   if (downBounce.fell()) { 
-    joystick.setYAxis(1); 
+    if (inputMode == JOYSTICK) { 
+      joystick.setYAxis(1); 
+    } else {
+      Keyboard.press(KEY_DOWN_ARROW);
+    }
   } else if (downBounce.rose()) {
-    joystick.setYAxis(0); 
+    if (inputMode == JOYSTICK) { 
+      joystick.setYAxis(0); 
+    } else {
+      Keyboard.release(KEY_DOWN_ARROW);
+    }
   }
   if (leftBounce.fell()) { 
-    joystick.setXAxis(-1); 
+    if (inputMode == JOYSTICK) { 
+      joystick.setXAxis(-1); 
+    } else {
+      Keyboard.press(KEY_LEFT_ARROW);
+    }
   } else if (leftBounce.rose()) {
-    joystick.setXAxis(0); 
+    if (inputMode == JOYSTICK) { 
+      joystick.setXAxis(0); 
+    } else {
+      Keyboard.release(KEY_LEFT_ARROW);
+    }
   }
   if (rightBounce.fell()) { 
-    joystick.setXAxis(1); 
+    if (inputMode == JOYSTICK) { 
+      joystick.setXAxis(1); 
+    } else {
+      Keyboard.press(KEY_RIGHT_ARROW);
+    }
   } else if (rightBounce.rose()) {
-    joystick.setXAxis(0); 
+    if (inputMode == JOYSTICK) { 
+      joystick.setXAxis(0); 
+    } else {
+      Keyboard.release(KEY_RIGHT_ARROW);
+    }
   }
 
   // 0 = fire
   // 1 = select
   // 2 = start
   if (fireBounce.fell()) { 
-    joystick.pressButton(0); 
+    if (inputMode == JOYSTICK) { 
+      joystick.pressButton(0); 
+    } else {
+      Keyboard.press('s');
+    }
   } else if (fireBounce.rose()) {
-    joystick.releaseButton(0); 
+    if (inputMode == JOYSTICK) { 
+      joystick.releaseButton(0); 
+    } else {
+      Keyboard.release('s');
+    }
   }
   if (selectBounce.fell()) { 
     joystick.pressButton(1); 
