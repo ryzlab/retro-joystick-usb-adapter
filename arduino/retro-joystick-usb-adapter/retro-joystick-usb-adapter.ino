@@ -1,13 +1,15 @@
 // https://github.com/MHeironimus/ArduinoJoystickLibrary
 
 #include <Keyboard.h>
-
 #include <Joystick.h>
-
 #include <Bounce2.h>
 
 #define JOYSTICK 1
 #define KEYBOARD 2
+
+#define JOYSTICK_BUTTON_FIRE    0
+#define JOYSTICK_BUTTON_SELECT  1
+#define JOYSTICK_BUTTON_START   2
 
 Joystick_ joystick(
   0x03,   // uint8_t hidReportId  - Default: 0x03 - Indicates the joystick's HID report ID.
@@ -96,6 +98,56 @@ void setup() {
   }
 }
 
+void handleYAxis(Bounce yBounce, int yAxis, int keyboardCaracter) {
+  // fell = switch closed
+  if (yBounce.fell()) {
+    if (inputMode == JOYSTICK) { 
+      joystick.setYAxis(yAxis); 
+    } else {
+      Keyboard.press(keyboardCharacter);
+    }
+  } else if (yBounce.rose()) {
+    if (inputMode == JOYSTICK) { 
+      joystick.setYAxis(0); 
+    } else {
+      Keyboard.release(keyboardCaracter);
+    }
+  }
+}
+void handleXAxis(Bounce xBounce, int xAxis, int keyboardCaracter) {
+  // fell = switch closed
+  if (xBounce.fell()) {
+    if (inputMode == JOYSTICK) { 
+      joystick.setXAxis(xAxis); 
+    } else {
+      Keyboard.press(keyboardCharacter);
+    }
+  } else if (xBounce.rose()) {
+    if (inputMode == JOYSTICK) { 
+      joystick.setXAxis(0); 
+    } else {
+      Keyboard.release(keyboardCaracter);
+    }
+  }
+}
+
+void handleButton(Bounce buttonBounce, int joystickButtonIndex, int keyboardCharacter) {
+  // fell = switch closed
+  if (buttonBounce.fell()) { 
+    if (inputMode == JOYSTICK) { 
+      joystick.pressButton(joystickButtonIndex); 
+    } else {
+      Keyboard.press(keyboardCharacter);
+    }
+  } else if (buttonBounce.rose()) {
+    if (inputMode == JOYSTICK) { 
+      joystick.releaseButton(joystickButtonIndex); 
+    } else {
+      Keyboard.release(keyboardCharacter);
+    }
+  }
+}
+
 void loop() {
   upBounce.update();
   downBounce.update();
@@ -105,84 +157,12 @@ void loop() {
   selectBounce.update();
   startBounce.update();
 
-  // fell = switch closed
-  if (upBounce.fell()) {
-    if (inputMode == JOYSTICK) { 
-      joystick.setYAxis(-1); 
-    } else {
-      Keyboard.press(KEY_UP_ARROW);
-    }
-  } else if (upBounce.rose()) {
-    if (inputMode == JOYSTICK) { 
-      joystick.setYAxis(0); 
-    } else {
-      Keyboard.release(KEY_UP_ARROW);
-    }
-  }
-  if (downBounce.fell()) { 
-    if (inputMode == JOYSTICK) { 
-      joystick.setYAxis(1); 
-    } else {
-      Keyboard.press(KEY_DOWN_ARROW);
-    }
-  } else if (downBounce.rose()) {
-    if (inputMode == JOYSTICK) { 
-      joystick.setYAxis(0); 
-    } else {
-      Keyboard.release(KEY_DOWN_ARROW);
-    }
-  }
-  if (leftBounce.fell()) { 
-    if (inputMode == JOYSTICK) { 
-      joystick.setXAxis(-1); 
-    } else {
-      Keyboard.press(KEY_LEFT_ARROW);
-    }
-  } else if (leftBounce.rose()) {
-    if (inputMode == JOYSTICK) { 
-      joystick.setXAxis(0); 
-    } else {
-      Keyboard.release(KEY_LEFT_ARROW);
-    }
-  }
-  if (rightBounce.fell()) { 
-    if (inputMode == JOYSTICK) { 
-      joystick.setXAxis(1); 
-    } else {
-      Keyboard.press(KEY_RIGHT_ARROW);
-    }
-  } else if (rightBounce.rose()) {
-    if (inputMode == JOYSTICK) { 
-      joystick.setXAxis(0); 
-    } else {
-      Keyboard.release(KEY_RIGHT_ARROW);
-    }
-  }
+  handleYAxis(upBounce,   -1, KEY_UP_ARROW);
+  handleYAxis(downBounce,  1, KEY_DOWN_ARROW);
+  handleXAxis(leftBounce, -1, KEY_LEFT_ARROW);
+  handleXAxis(rightBounce, 1, KEY_RIGHT_ARROW);
 
-  // 0 = fire
-  // 1 = select
-  // 2 = start
-  if (fireBounce.fell()) { 
-    if (inputMode == JOYSTICK) { 
-      joystick.pressButton(0); 
-    } else {
-      Keyboard.press('s');
-    }
-  } else if (fireBounce.rose()) {
-    if (inputMode == JOYSTICK) { 
-      joystick.releaseButton(0); 
-    } else {
-      Keyboard.release('s');
-    }
-  }
-  if (selectBounce.fell()) { 
-    joystick.pressButton(1); 
-  } else if (selectBounce.rose()) {
-    joystick.releaseButton(1); 
-  }
-  if (startBounce.fell()) { 
-    joystick.pressButton(2); 
-  } else if (startBounce.rose()) {
-    joystick.releaseButton(2); 
-  }
+  handleButton(fireBounce, JOYSTICK_BUTTON_FIRE, 's');
+  handleButton(selectBounce, JOYSTICK_BUTTON_SELECT, 's');
+  handleButton(startBounce, JOYSTICK_BUTTON_START, 's');
 }
