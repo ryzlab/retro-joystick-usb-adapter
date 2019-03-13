@@ -98,7 +98,7 @@ void setup() {
   }
 }
 
-void handleYAxis(Bounce yBounce, int yAxis, int keyboardCaracter) {
+void handleYAxis(Bounce yBounce, int yAxis, int keyboardCharacter) {
   // fell = switch closed
   if (yBounce.fell()) {
     if (inputMode == JOYSTICK) { 
@@ -110,11 +110,11 @@ void handleYAxis(Bounce yBounce, int yAxis, int keyboardCaracter) {
     if (inputMode == JOYSTICK) { 
       joystick.setYAxis(0); 
     } else {
-      Keyboard.release(keyboardCaracter);
+      Keyboard.release(keyboardCharacter);
     }
   }
 }
-void handleXAxis(Bounce xBounce, int xAxis, int keyboardCaracter) {
+void handleXAxis(Bounce xBounce, int xAxis, int keyboardCharacter) {
   // fell = switch closed
   if (xBounce.fell()) {
     if (inputMode == JOYSTICK) { 
@@ -126,7 +126,7 @@ void handleXAxis(Bounce xBounce, int xAxis, int keyboardCaracter) {
     if (inputMode == JOYSTICK) { 
       joystick.setXAxis(0); 
     } else {
-      Keyboard.release(keyboardCaracter);
+      Keyboard.release(keyboardCharacter);
     }
   }
 }
