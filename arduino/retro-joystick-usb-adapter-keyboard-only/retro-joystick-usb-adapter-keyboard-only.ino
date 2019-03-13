@@ -46,7 +46,7 @@ void setup() {
   downBounce.interval   (BOUNCE_INTERVAL);
   leftBounce.interval   (BOUNCE_INTERVAL);
   rightBounce.interval  (BOUNCE_INTERVAL);
-  fireBounce.interval   (BOU śNCE_INTERVAL);
+  fireBounce.interval   (BOUNCE_INTERVAL);
   selectBounce.interval (BOUNCE_INTERVAL);
   startBounce.interval  (BOUNCE_INTERVAL);
 
@@ -77,5 +77,5 @@ void loop() {
   handleInput(leftBounce,  KEY_LEFT_ARROW);
   handleInput(rightBounce, KEY_RIGHT_ARROW);
   handleInput(fireBounce,  ' ');
-  handleInput(fireBounce,  's');
+  //handleInput(fireBounce,  's');
 }
